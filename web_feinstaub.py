@@ -190,10 +190,6 @@ def start_sensor():
 			# Lese die aus der GPS session die akt. Koordinaten
 			session.next()
 
-			
-			pm_25 = (random.randint(0,100))
-			pm_10 = pm_25
-
 			# Nur wenn eine gueltige FIX Positon bekannt istitle
 			# Zeichne die GPS Daten und Feinstaubwerte in einer
 			# KML Datei auf.
