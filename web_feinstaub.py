@@ -5,6 +5,7 @@ from gps import *
 #import csv
 import datetime
 from random import randint
+import random
 
 from threading import Thread
 
@@ -28,11 +29,16 @@ global pm_25
 pm_10 = 0
 pm_25 = 0
 
+global error_msg
+error_msg = ""
+
 # Default Farbe fuer die Weg-Linie in der KML Datei.
 color = "#00000000"	
 	
 # Funktion fuer das Erfassen von Meldungen aus dem Programm heraus.
 def write_log(msg):
+	global error_msg
+	error_msg = msg
 	message = msg
 	fname = "/home/pi/feinstaub/feinstaub_python_program.log"
 	with open(fname,'a+') as file:
@@ -54,37 +60,6 @@ def color_selection(value):
 		color = "#64009614"		
 		
 	return color
-
-# Diese Funktion schreibt die KML Datei ohne die Wegstrecke anzuzeigen
-def write_kml(value_pm, value_lat, value_lon, value_time, value_fname, type):	
-	pm = value_pm
-	lat = value_lat
-	lon = value_lon
-	time = value_time
-	fname = value_fname
-	
-	try:
-		if os.path.exists(fname):
-			with open(fname,'a+') as file:
-				file.write("   <Placemark>\n")
-				file.write("       <name>"+type+": "+ pm +"</name>\n")
-				file.write("       <description> Time: " + time + "</description>\n")
-				file.write("       <Point>\n")
-				file.write("           <coordinates>" + lon + "," + lat + ",0</coordinates>\n")
-				file.write("       </Point>\n")
-				file.write("   </Placemark>\n")	
-				file.close()	
-
-		else:
-			with open(fname,'a+') as file:
-				file.write("<?xml version='1.0' encoding='UTF-8'?>\n")
-				file.write("<kml xmlns='http://earth.google.com/kml/2.1'>\n")
-				file.write("<Document>\n")
-				file.write("   <name> Feinstaub_Punkte_" + type + "_" + datetime.datetime.now().strftime ("%Y%m%d") + ".kml </name>\n")
-				file.write('\n')
-				file.close()
-	except Exception, e:
-		write_log(str(e))
 
 # Diese Funktion schreibt die KML Datei mit der zurueck gelegten Wegstrecke.
 def write_kml_line(value_pm, value_pm_old, value_lon_old, value_lat_old, value_lat, value_lon, value_time, value_fname, type, value_color):
@@ -166,7 +141,7 @@ def start_sensor():
 	try:
 		ser = serial.Serial(sds011, baudrate=9600, stopbits=1, parity="N", timeout=2)
 	except Exception, e:
-		write_log(e)
+		write_log("\n HL-340 USB-Serial Adapter nicht verfuegbar. \n"+str(e))
 
 	try:
 		ser.flushInput()
@@ -184,16 +159,11 @@ def start_sensor():
 		while run:
 			if save_file == False:
 				# micro-sd card paths for the kml files
-				fname25 = '/home/pi/feinstaub/feinstaub_25_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
-				fname10 = '/home/pi/feinstaub/feinstaub_10_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
-
 				fname25_line = '/home/pi/feinstaub/feinstaub_25_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
 				fname10_line = '/home/pi/feinstaub/feinstaub_10_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'			
 			save_file = True
 			
-
-			
-			# start logic
+			# Hier wird der SDS001 ausgelesen.
 			
 			time.sleep(0.5)
 			
@@ -201,7 +171,7 @@ def start_sensor():
 			try:
 				byte = ser.read(size=1)
 			except Exception, e:
-				write_log(e)
+				write_log("\n HL-340 USB-Serial Adapter kann nicht gelesen werden. \n"+str(e))
 
 
 			# We got a valid packet header
@@ -213,14 +183,16 @@ def start_sensor():
 					# message tail
 					readings = struct.unpack('<hhxxcc',sentence) 
 				except Exception, e:
-					write_log(e)
+					write_log(("\n SDS001 Datenpaket kann nicht gelesen werden. \n"+str(e)))
 				pm_25 = readings[0]/10.0
 				pm_10 = readings[1]/10.0
 			
 			# Lese die aus der GPS session die akt. Koordinaten
 			session.next()
 
-					
+			
+			pm_25 = (random.randint(0,100))
+			pm_10 = pm_25
 
 			# Nur wenn eine gueltige FIX Positon bekannt istitle
 			# Zeichne die GPS Daten und Feinstaubwerte in einer
@@ -233,13 +205,8 @@ def start_sensor():
 				if lon_old == "initial":	
 					lon_old = session.fix.longitude
 				
-				write_kml(str(pm_25), str(session.fix.latitude), str(session.fix.longitude), str(session.utc), fname25, "25")
-				write_kml(str(pm_10), str(session.fix.latitude), str(session.fix.longitude), str(session.utc), fname10, "10")
-				
 				color_25 = color_selection(pm_25)
 				color_10 = color_selection(pm_10)
-				
-				time.sleep(0.2)
 				
 				write_kml_line(str(pm_25), str(pm_old_25), str(lon_old), str(lat_old), str(session.fix.latitude), str(session.fix.longitude), str(session.utc), fname25_line, "25", color_25)
 				write_kml_line(str(pm_10), str(pm_old_10), str(lon_old), str(lat_old), str(session.fix.latitude), str(session.fix.longitude), str(session.utc), fname10_line, "10", color_10)
@@ -260,10 +227,6 @@ def start_sensor():
 			if save_file == True:
 				#print "save file"
 				# Hier werden die KML Dateien geschlossen.
-				close_kml(fname25)
-				time.sleep(0.2)	
-				close_kml(fname10)
-				time.sleep(0.2)	
 				close_kml(fname25_line)
 				time.sleep(0.2)	
 				close_kml(fname10_line)
@@ -313,8 +276,8 @@ def status():
 	global display_lon
 	global pm_10
 	global pm_25
-	
-	ret_data = {"value": status_text, "lat": display_lat, "lon": display_lon, "pm_10": pm_10, "pm_25":pm_25}
+	global error_msg	
+	ret_data = {"value": status_text, "lat": display_lat, "lon": display_lon, "pm_10": pm_10, "pm_25":pm_25, "error_msg":error_msg}
 	return jsonify(ret_data)
 	
 @app.route('/halt/', methods=['GET'])
