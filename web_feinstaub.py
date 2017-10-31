@@ -159,8 +159,8 @@ def start_sensor():
 		while run:
 			if save_file == False:
 				# micro-sd card paths for the kml files
-				fname25_line = '/home/pi/feinstaub/feinstaub_25_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
-				fname10_line = '/home/pi/feinstaub/feinstaub_10_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'			
+				fname25_line = '/home/pi/Feinstaubsensor/feinstaub_25_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
+				fname10_line = '/home/pi/Feinstaubsensor/feinstaub_10_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'			
 			save_file = True
 			
 			# Hier wird der SDS001 ausgelesen.
