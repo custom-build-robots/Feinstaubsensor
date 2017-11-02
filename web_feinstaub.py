@@ -2,15 +2,19 @@ import os
 import time
 import serial, struct
 from gps import *
-#import csv
+
 import datetime
 from random import randint
 import random
 
 from threading import Thread
+import threading
 
 from flask import Flask, jsonify, render_template, request
 app = Flask(__name__)
+
+global session
+session = None
 
 global run
 run = False
@@ -110,20 +114,92 @@ def close_kml(file_name):
 	except Exception, e:
 		write_log(e)
 
+# Klasse um auf den GPSD Stream via Thread zuzugreifen.
+class GpsdStreamReader(threading.Thread):
+	def __init__(self):
+		global session
+		threading.Thread.__init__(self)
+		# 
+		session = gps(mode=WATCH_ENABLE)
+		self.current_value = None
+		# Der Thread wird ausgefuehrt
+		self.running = True
+ 
+	def run(self):
+		global session
+		while t_gps.running:
+			# Lese den naechsten Datensatz von GPSD
+			session.next()	  
+
+# Klasse um auf den SDS001 Sensor via Thread zuzugreifen.
+class SDS001StreamReader(threading.Thread):
+	def __init__(self):
+		global byte
+		global lastbyte
+		global ser
+		# Variablen fuer die Messwerte vom Feinstaubsensor.
+		byte, lastbyte = "\x00", "\x00"	
+		
+		# USB Geraetepfad des Feinstaubsensors bitte hier setzen.
+		sds011 = "/dev/ttyUSB0"
+		threading.Thread.__init__(self)
+		# Hier wird auf den Serial-USB Konverter zugegriffen
+		try:
+			ser = serial.Serial(sds011, baudrate=9600, stopbits=1, parity="N", timeout=2)
+		except Exception, e:
+			write_log("\n HL-340 USB-Serial Adapter nicht verfuegbar. \n"+str(e))
+
+		try:
+			ser.flushInput()
+		except Exception, e:
+			write_log(e)
+		
+		self.current_value = None
+		# Der Thread wird ausgefuehrt
+		self.running = True
+ 
+	def run(self):
+		global pm_25
+		global pm_10
+		global byte
+		global lastbyte
+		global ser
+		
+		while t_sds011.running:
+			lastbyte = byte
+			try:
+				byte = ser.read(size=1)
+			except Exception, e:
+				write_log("\n Fehler HL-340 USB-Serial Adapter.\n"+str(e))
+
+
+			# Wenn es ein gueltiges Datenpaket gibt bearbeite dieses
+			if lastbyte == "\xAA" and byte == "\xC0":
+				try:
+					# Es werden 8 Byte eingelesen.
+					sentence = ser.read(size=8) 
+					# Das eingelesene Datenpaket wird dekodiert.
+					readings = struct.unpack('<hhxxcc',sentence) 
+				except Exception, e:
+					write_log(("\n SDS011 Datenpaket kann nicht gelesen werden. \n"+str(e)))
+					
+				pm_25 = readings[0]/10.0
+				pm_10 = readings[1]/10.0	  
+			
+			# Testwerte als Feinstaubwerte.
+			pm_25 = (random.randint(0,100))
+			pm_10 = pm_25
+			
 def start_sensor():
 	global run
-	
+	global session
 	global display_lat
 	global display_lon
 	global pm_10
 	global pm_25
 	
 	save_file = False
-	# Variablen fuer die Messwerte vom Feinstaubsensor.
-	byte, lastbyte = "\x00", "\x00"	
-	
-	# USB Geraetepfad des Feinstaubsensors bitte hier setzen.
-	sds011 = "/dev/ttyUSB0"
+
 	# GPS Koordinaten-Variable Vorgaengerwert.
 	lat_old = "initial"
 	lon_old = "initial"
@@ -132,30 +208,11 @@ def start_sensor():
 	pm_old_25 = 0
 	pm_old_10 = 0
 
-	# Feinstaubwerte 25 und 10 als aktuelle Werte.
-	pm_10 = 0
-	pm_25 = 0
-
-	# In diesem Abschnitt wird die serielle Verbindung zu dem Feinstaub-
-	# sensor initialisiert.
-	try:
-		ser = serial.Serial(sds011, baudrate=9600, stopbits=1, parity="N", timeout=2)
-	except Exception, e:
-		write_log("\n HL-340 USB-Serial Adapter nicht verfuegbar. \n"+str(e))
-
-	try:
-		ser.flushInput()
-	except Exception, e:
-		write_log(e)
-
-	# Hier wird das Session Objekt fuer den GPS Stream angelegt.
-	try:
-		session = gps(mode=WATCH_ENABLE)	
-	except Exception, e:
-		write_log(e)
-		
 	while True:
 
+		display_lat = session.fix.latitude
+		display_lon = session.fix.longitude
+				
 		while run:
 			if save_file == False:
 				# micro-sd card paths for the kml files
@@ -163,33 +220,10 @@ def start_sensor():
 				fname10_line = '/home/pi/Feinstaubsensor/feinstaub_10_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'			
 			save_file = True
 			
-			# Hier wird der SDS001 ausgelesen.
+			# Hier wird der Intervall gesetzt wie oft ein Wert
+			# in die KML Datei geschrieben werden soll
+			time.sleep(2)
 			
-			time.sleep(0.5)
-			
-			lastbyte = byte
-			try:
-				byte = ser.read(size=1)
-			except Exception, e:
-				write_log("\n HL-340 USB-Serial Adapter kann nicht gelesen werden. \n"+str(e))
-
-
-			# We got a valid packet header
-			if lastbyte == "\xAA" and byte == "\xC0":
-				try:
-					sentence = ser.read(size=8) # Read 8 more bytes
-					# Decode the packet - big endian, 2 shorts for 
-					# pm2.5 and pm10, 2 reserved bytes, checksum, 
-					# message tail
-					readings = struct.unpack('<hhxxcc',sentence) 
-				except Exception, e:
-					write_log(("\n SDS001 Datenpaket kann nicht gelesen werden. \n"+str(e)))
-				pm_25 = readings[0]/10.0
-				pm_10 = readings[1]/10.0
-			
-			# Lese die aus der GPS session die akt. Koordinaten
-			session.next()
-
 			# Nur wenn eine gueltige FIX Positon bekannt istitle
 			# Zeichne die GPS Daten und Feinstaubwerte in einer
 			# KML Datei auf.
@@ -210,25 +244,17 @@ def start_sensor():
 				lat_old = session.fix.latitude
 				lon_old = session.fix.longitude
 				
-				display_lat = session.fix.latitude
-				display_lon = session.fix.longitude
-				
 				pm_old_25 = pm_25
 				pm_old_10 = pm_10
-			else:
-				display_lat = "Kein GPS fix gefunden, keine Aufzeichnung der Messwerte"
-				display_lon = "Kein GPS fix gefunden, keine Aufzeichnung der Messwerte"
+
 	
 		if run == False:
 			if save_file == True:
-				#print "save file"
 				# Hier werden die KML Dateien geschlossen.
 				close_kml(fname25_line)
 				time.sleep(0.2)	
 				close_kml(fname10_line)
-				time.sleep(0.2)	
-				display_lat = "keine GPS Aufzeichnung aktiv"
-				display_lon = "keine GPS Aufzeichnung aktiv"				
+				time.sleep(0.2)			
 				save_file = False
 
 # Diese Funktion schaltet den Raspberry Pi ab.				
@@ -280,8 +306,9 @@ def status():
 def halt():
 	global run
 	run = False
-
+	t_gps.running = False
 	t_shutdown.start()
+	t_gps.join()
 	
 	ret_data = {"value": "Der Raspberry Pi schaltet sich in 10 Sekunden aus."}
 	return jsonify(ret_data)
@@ -291,16 +318,35 @@ def halt():
 def reboot():
 	global run
 	run = False
-	
+	t_gps.running = False
 	t_reboot.start()
+	t_gps.join()
 	
 	ret_data = {"value": "Der Raspberry Pi wird neugestartet"}
 	return jsonify(ret_data)	
 	
 if __name__ == '__main__':
-	t_shutdown = Thread(target=shutdownpi)
-	t_reboot = Thread(target=rebootpi)	
+
+	# Start des Threads der den GPS Empfaenger ausliesst.
+	t_gps = GpsdStreamReader()
+	t_gps.start()
+	
+	# Start des Threads der den Feinstaubsensor ueber den USB-Serial
+	# Konverter ausliesst.
+	t_sds011 = SDS001StreamReader()
+	t_sds011.start()
+	
+	# Kurze Pazse um zu warten bis die beiden Threads t_gps und 
+	# t_sds01 starten konnten.
+	time.sleep(3)
 	t_start_sensor = Thread(target=start_sensor)
 	t_start_sensor.start()
 	
+	# Initialisieren des Shutdown Threads.
+	t_shutdown = Thread(target=shutdownpi)
+	
+	# Initialisieren des Reboot Threads.
+	t_reboot = Thread(target=rebootpi)		
+	
+	# Starten des Flask Web-Servers.
 	app.run(host='0.0.0.0', port=8181, debug=False)
