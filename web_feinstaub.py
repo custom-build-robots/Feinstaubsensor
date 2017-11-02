@@ -186,10 +186,6 @@ class SDS001StreamReader(threading.Thread):
 				pm_25 = readings[0]/10.0
 				pm_10 = readings[1]/10.0	  
 			
-			# Testwerte als Feinstaubwerte.
-			pm_25 = (random.randint(0,100))
-			pm_10 = pm_25
-			
 def start_sensor():
 	global run
 	global session
