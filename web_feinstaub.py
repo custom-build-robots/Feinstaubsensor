@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# coding: latin-1
+# Autor:   Ingmar Stapel
+# Datum:   20171103
+# Version:   1.0
+# Homepage:   https://www.byteyourlife.com/
+# Dieses Programm ermoeglicht es einen mobilen Feinstaubsensor
+# auf Basis eines Raspberry Pi Computers zu bauen.
+# Ueber Anregungen und Verbesserungsvorschlaege wuerde
+# ich mich sehr freuen.
+
 import os
 import time
 import serial, struct
@@ -36,15 +47,22 @@ pm_25 = 0
 global error_msg
 error_msg = ""
 
+# Hier wird der Speicherort fuer die KML Dateien und die LOG Dateien
+# festgelegt. Aendern Sie hier zentral den Speicherort ab.
+global dir_path
+dir_path = "/home/pi/Feinstaubsensor/"
+
 # Default Farbe fuer die Weg-Linie in der KML Datei.
 color = "#00000000"	
 	
-# Funktion fuer das Erfassen von Meldungen aus dem Programm heraus.
+# Funktion fuer das Erfassen von Fehlermeldungen 
+# die waehrend dem Ablauf des Progammes entstehen koennen.
 def write_log(msg):
+	global dir_path
 	global error_msg
 	error_msg = msg
 	message = msg
-	fname = "/home/pi/feinstaub/feinstaub_python_program.log"
+	fname = dir_path+"feinstaub_python_program.log"
 	with open(fname,'a+') as file:
 		file.write(str(message))
 		file.write("\n")
@@ -79,7 +97,15 @@ def write_kml_line(value_pm, value_pm_old, value_lon_old, value_lat_old, value_l
 	try:
 		if os.path.exists(fname):
 			with open(fname,'a+') as file:
+			# Hier ist eine sehr gute Dokumentation zu finden ueber
+			# den Aufbau von KML Dateien.
+			# https://developers.google.com/kml/documentation/kml_tut
 				file.write("   <Placemark>\n")
+				file.write("   <name>"+ pm +"</name>\n")
+				file.write("    <description>"+ pm +"</description>\n")
+				file.write("    <Point>\n")
+				file.write("      <coordinates>" + lon + "," + lat + "," + pm + "</coordinates>\n")
+				file.write("    </Point>\n")
 				file.write("       <LineString>\n")
 				file.write("           <altitudeMode>relativeToGround</altitudeMode>\n")
 				file.write("           <coordinates>" + lon + "," + lat + "," + pm + "\n           "+ lon_old+ ","+ lat_old+ "," + pm_old + "</coordinates>\n")
@@ -91,8 +117,7 @@ def write_kml_line(value_pm, value_pm_old, value_lon_old, value_lat_old, value_l
 				file.write("           </LineStyle>\n")
 				file.write("       </Style>\n")
 				file.write("   </Placemark>\n")	
-				file.close()	
-
+				file.close()
 		else:
 			with open(fname,'a+') as file:
 				file.write("<?xml version='1.0' encoding='UTF-8'?>\n")
@@ -186,6 +211,10 @@ class SDS001StreamReader(threading.Thread):
 				pm_25 = readings[0]/10.0
 				pm_10 = readings[1]/10.0	  
 			
+			# Testwerte als Feinstaubwerte.
+			#pm_25 = (random.randint(0,100))
+			#pm_10 = pm_25
+			
 def start_sensor():
 	global run
 	global session
@@ -193,6 +222,7 @@ def start_sensor():
 	global display_lon
 	global pm_10
 	global pm_25
+	global dir_path
 	
 	save_file = False
 
@@ -205,15 +235,12 @@ def start_sensor():
 	pm_old_10 = 0
 
 	while True:
-
-		display_lat = session.fix.latitude
-		display_lon = session.fix.longitude
 				
 		while run:
 			if save_file == False:
 				# micro-sd card paths for the kml files
-				fname25_line = '/home/pi/Feinstaubsensor/feinstaub_25_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
-				fname10_line = '/home/pi/Feinstaubsensor/feinstaub_10_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'			
+				fname25_line = dir_path+'feinstaub_25_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
+				fname10_line = dir_path+'feinstaub_10_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'			
 			save_file = True
 			
 			# Hier wird der Intervall gesetzt wie oft ein Wert
@@ -294,7 +321,10 @@ def status():
 	global display_lon
 	global pm_10
 	global pm_25
-	global error_msg	
+	global error_msg
+	global session	
+	display_lat = session.fix.latitude
+	display_lon = session.fix.longitude	
 	ret_data = {"value": status_text, "lat": display_lat, "lon": display_lon, "pm_10": pm_10, "pm_25":pm_25, "error_msg":error_msg}
 	return jsonify(ret_data)
 	
