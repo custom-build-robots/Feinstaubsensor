@@ -49,8 +49,8 @@ error_msg = ""
 
 # Hier wird der Speicherort fuer die KML Dateien und die LOG Dateien
 # festgelegt. Aendern Sie hier zentral den Speicherort ab.
-global dir_path
-dir_path = "/home/pi/Feinstaubsensor/"
+global save_path
+save_path = "/home/pi/Feinstaubsensor/"
 
 # Default Farbe fuer die Weg-Linie in der KML Datei.
 color = "#00000000"	
@@ -62,7 +62,7 @@ def write_log(msg):
 	global error_msg
 	error_msg = msg
 	message = msg
-	fname = dir_path+"feinstaub_python_program.log"
+	fname = save_path+"feinstaub_python_program.log"
 	with open(fname,'a+') as file:
 		file.write(str(message))
 		file.write("\n")
@@ -239,8 +239,8 @@ def start_sensor():
 		while run:
 			if save_file == False:
 				# micro-sd card paths for the kml files
-				fname25_line = dir_path+'feinstaub_25_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
-				fname10_line = dir_path+'feinstaub_10_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'			
+				fname25_line = save_path+'feinstaub_25_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
+				fname10_line = save_path+'feinstaub_10_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'			
 			save_file = True
 			
 			# Hier wird der Intervall gesetzt wie oft ein Wert
