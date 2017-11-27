@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # coding: latin-1
 # Autor:   Ingmar Stapel
-# Datum:   20171103
-# Version:   1.0
+# Datum:   20171127
+# Version:   1.1
 # Homepage:   https://www.byteyourlife.com/
 # Dieses Programm ermoeglicht es einen mobilen Feinstaubsensor
 # auf Basis eines Raspberry Pi Computers zu bauen.
@@ -49,8 +49,8 @@ error_msg = ""
 
 # Hier wird der Speicherort fuer die KML Dateien und die LOG Dateien
 # festgelegt. Aendern Sie hier zentral den Speicherort ab.
-global save_path
-save_path = "/home/pi/Feinstaubsensor/"
+global dir_path
+dir_path = "/home/pi/Feinstaubsensor/"
 
 # Default Farbe fuer die Weg-Linie in der KML Datei.
 color = "#00000000"	
@@ -62,7 +62,7 @@ def write_log(msg):
 	global error_msg
 	error_msg = msg
 	message = msg
-	fname = save_path+"feinstaub_python_program.log"
+	fname = dir_path+"feinstaub_python_program.log"
 	with open(fname,'a+') as file:
 		file.write(str(message))
 		file.write("\n")
@@ -83,6 +83,21 @@ def color_selection(value):
 		
 	return color
 
+# Diese Funktion schreibt die CSV Datei mit den Feinstaubwerten und
+# den GPS Koordinaten.
+def write_csv(pm_25, pm_10, value_lat, value_lon, value_time, value_fname):
+	pm_25 = pm_25
+	pm_10 = pm_10
+	lat = value_lat
+	lon = value_lon
+	time = value_time
+	fname = value_fname
+	with open(fname,'a') as file:
+		line = ""+pm_25+";"+pm_10+";"+lat+";"+lon+";"+time
+		file.write(line)
+		file.write('\n')
+		file.close()
+						
 # Diese Funktion schreibt die KML Datei mit der zurueck gelegten Wegstrecke.
 def write_kml_line(value_pm, value_pm_old, value_lon_old, value_lat_old, value_lat, value_lon, value_time, value_fname, type, value_color):
 	pm = value_pm
@@ -212,8 +227,8 @@ class SDS001StreamReader(threading.Thread):
 				pm_10 = readings[1]/10.0	  
 			
 			# Testwerte als Feinstaubwerte.
-			#pm_25 = (random.randint(0,100))
-			#pm_10 = pm_25
+			pm_25 = pm_25 * 3
+			pm_10 = pm_10 * 3
 			
 def start_sensor():
 	global run
@@ -239,8 +254,9 @@ def start_sensor():
 		while run:
 			if save_file == False:
 				# micro-sd card paths for the kml files
-				fname25_line = save_path+'feinstaub_25_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
-				fname10_line = save_path+'feinstaub_10_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'			
+				fname25_line = dir_path+'feinstaub_25_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'
+				fname10_line = dir_path+'feinstaub_10_line_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.kml'	
+				fname_csv = dir_path+'feinstaub_'+datetime.datetime.now().strftime ("%Y%m%d_%H_%M_%S")+'.csv'
 			save_file = True
 			
 			# Hier wird der Intervall gesetzt wie oft ein Wert
@@ -263,14 +279,15 @@ def start_sensor():
 				
 				write_kml_line(str(pm_25), str(pm_old_25), str(lon_old), str(lat_old), str(session.fix.latitude), str(session.fix.longitude), str(session.utc), fname25_line, "25", color_25)
 				write_kml_line(str(pm_10), str(pm_old_10), str(lon_old), str(lat_old), str(session.fix.latitude), str(session.fix.longitude), str(session.utc), fname10_line, "10", color_10)
-
+				
 				lat_old = session.fix.latitude
 				lon_old = session.fix.longitude
 				
 				pm_old_25 = pm_25
 				pm_old_10 = pm_10
 
-	
+			write_csv(str(pm_25), str(pm_old_10), str(session.fix.latitude), str(session.fix.longitude), datetime.datetime.now().strftime ("%Y%m%d;%H:%M:%S"), fname_csv)
+				
 		if run == False:
 			if save_file == True:
 				# Hier werden die KML Dateien geschlossen.
