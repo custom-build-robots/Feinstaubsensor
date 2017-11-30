@@ -11,6 +11,7 @@
 
 import os
 import time
+import string
 import serial, struct
 from gps import *
 
@@ -86,8 +87,8 @@ def color_selection(value):
 # Diese Funktion schreibt die CSV Datei mit den Feinstaubwerten und
 # den GPS Koordinaten.
 def write_csv(pm_25, pm_10, value_lat, value_lon, value_time, value_fname):
-	pm_25 = pm_25
-	pm_10 = pm_10
+	pm_25 = string.replace(pm_25, ".", ",")
+	pm_10 = string.replace(pm_10, ".", ",")
 	lat = value_lat
 	lon = value_lon
 	time = value_time
@@ -223,12 +224,8 @@ class SDS001StreamReader(threading.Thread):
 				except Exception, e:
 					write_log(("\n SDS011 Datenpaket kann nicht gelesen werden. \n"+str(e)))
 					
-				pm_25 = readings[0]/10.0
-				pm_10 = readings[1]/10.0	  
-			
-			# Testwerte als Feinstaubwerte.
-			pm_25 = pm_25 * 3
-			pm_10 = pm_10 * 3
+				pm_25 = round(readings[0]/10.0, 3)
+				pm_10 = round(readings[1]/10.0, 3)	  
 			
 def start_sensor():
 	global run
