@@ -16,5 +16,8 @@ Folgende Erweiterungen wuerde ich gerne noch fuer die mobile Variante des Feinst
 Ich gehe davon aus, das abhaengig von der Luftfeuchte und Temperatur die Messwerte sich unterscheiden. Daher wuerde ich gerne diesen Daten auch noch mit erfassen. Als Sensor habe ich an einen DHT22 Sensor gedacht, der sich leicht an den Raspberry Pi anschließen laesst und guenstig in der Anschaffung ist.
 ### Luftdruck messen
 Weiter spielt der Luftdruck wohl auch eine Rolle bei der Messung der Staeube in der Luft. Daher soll noch ein BMP085 Sensor den Luftdruck erfassen. 
+### BME280
+Mit dem Adafruit BME280 Sensor haette ich alle drei Sensoren auf einer Platine. Auch ist der I2C Bus klasse und die Ansteuerung dank der Bibliotheken von Adafruit mit Python recht einfach umzusetzen.
+https://www.adafruit.com/product/2652
 ### Flask-SocketIO asynchrones Updates
 Aktuell aktualisiert die Web-Overflaeche nur die gemessenen Werte wenn expliziet das refresh Button gedrueckt wird. Aber viel bessere waere es wenn die Werte in einem frei definierbaren Intervall aktualisiert werden also z. B. jede Sekunge.
