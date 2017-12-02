@@ -6,6 +6,9 @@ https://www.byteyourlife.com/haushaltsgeraete/feinstaubsensor-komponentenliste/7
 
 ## Version 0.1
 Die erste Version der mobilen Variante des Feinstaubsensors sah bei mir wie auf dem folgenden Bild gezeigt aus.
+![ByteYourLife - Feinstaubsensor](https://www.byteyourlife.com/wp-content/uploads/2017/05/Mobiler_Feinstaubsensor_03-300x225.jpg)
+## Version 1.0
+Die aktuelle Version des mobilen Feinstaubsensor sieht wie auf dem nachfolgenden Bild gezeigt aus.
 ![ByteYourLife - Feinstaubsensor](https://www.byteyourlife.com/wp-content/uploads/2017/10/Feinstaubsensor_small-300x200.jpg)
 ## Wunschliste
 Folgende Erweiterungen wuerde ich gerne noch fuer die mobile Variante des Feinstaubsensors umsetzen. Einmal weitere Sensoren einbauen um einen Rueckschluss auf das Wetter zu erhalten sowie noch die Web-Oberflaeche optimieren.
