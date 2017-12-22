@@ -283,7 +283,7 @@ def start_sensor():
 				pm_old_25 = pm_25
 				pm_old_10 = pm_10
 
-			write_csv(str(pm_25), str(pm_old_10), str(session.fix.latitude), str(session.fix.longitude), datetime.datetime.now().strftime ("%Y%m%d;%H:%M:%S"), fname_csv)
+			write_csv(str(pm_25), str(pm_10), str(session.fix.latitude), str(session.fix.longitude), datetime.datetime.now().strftime ("%Y%m%d;%H:%M:%S"), fname_csv)
 				
 		if run == False:
 			if save_file == True:
