@@ -14,6 +14,7 @@ Die aktuelle Version des mobilen Feinstaubsensor sieht wie auf dem nachfolgenden
 
 ## BME280 Sensor - fuer Luftdruck, Luffeuchte und Temperatur
 In den Feinstaubsensor wurde noch ein Adafruit BME280 Sensor (https://www.adafruit.com/product/2652) fuer Luftdruck, Luftfeuchte und Temperatur integriert. Die Programme wurden entsprechend angepasst. Damit der BME280 Sensor angesprochen wird und die Messwerte in die CSV Datei geschreiben werden muss das Programm "web_feinstaub_bme280.py" und die HTML Datei "index_bme280.html" verwendet werden. Entsprechend muss die Start Datei "feinstaub_start.sh" angepasst werden damit das Programm "web_feinstaub_bme280.py" automatisch nach dem Einschalten des Raspberry Pi gestartet wird.
+
 ![ByteYourLife - Feinstaubsensor](https://www.byteyourlife.com/wp-content/uploads/2017/12/Raspberry_Pi_mobiler_Feinstaubsensor_BME280_macro-768x512.jpg)
 
 ## Wunschliste
