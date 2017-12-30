@@ -24,7 +24,7 @@ Die Wunschliste listet die Funktionen auf die ich noch gerne in das Projekt inte
 Aktuell aktualisiert die Web-Overflaeche nur die gemessenen Werte wenn expliziet das refresh Button gedrueckt wird. Aber viel bessere waere es wenn die Werte in einem frei definierbaren Intervall aktualisiert werden also z. B. jede Sekunge.
 
 ### Sleep / Measure Mode SDS011
-Ich würde sehr gerne eine Funktion in mein Programm integrieren die den SDS011 Sensor auch in den Sleep Mode versetzt wenn keine Messung erfolgen soll. Auch wäre es so möglich abhängig von der Geschwindigkeit den Messintervall des SDS011 einzustellen. Den Hinweis dazu habe ich von link:https://github.com/luetzel[luetzel] erhalten.
+Ich würde sehr gerne eine Funktion in mein Programm integrieren die den SDS011 Sensor auch in den Sleep Mode versetzt wenn keine Messung erfolgen soll. Auch wäre es so möglich abhängig von der Geschwindigkeit den Messintervall des SDS011 einzustellen. Den Hinweis dazu habe ich von [luetzel](https://github.com/luetzel) erhalten.
 Ich habe mir das folgende Projekt jetzt genauer angeschaut und werde wohl auf diesem Code aufsetzen.
-link:https://gitlab.com/frankrich/sds011_particle_sensor[Frank Heuer SDS011 Python]
+[Frank Heuer SDS011 Python](https://gitlab.com/frankrich/sds011_particle_sensor)
 
