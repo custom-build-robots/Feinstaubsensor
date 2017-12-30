@@ -18,7 +18,13 @@ In den Feinstaubsensor wurde noch ein Adafruit BME280 Sensor (https://www.adafru
 ![ByteYourLife - Feinstaubsensor](https://www.byteyourlife.com/wp-content/uploads/2017/12/Raspberry_Pi_mobiler_Feinstaubsensor_BME280_macro-768x512.jpg)
 
 ## Wunschliste
-Damit immer die aktuellen Sensorwerte auf der Web-Oberflaeche angezeigt werden würde ich gerne noch Web-Sockets zusammen mit dem Flask Web-Server integrieren.
+Die Wunschliste listet die Funktionen auf die ich noch gerne in das Projekt integrieren möchte.
 
 ### Flask-SocketIO asynchrones Updates
 Aktuell aktualisiert die Web-Overflaeche nur die gemessenen Werte wenn expliziet das refresh Button gedrueckt wird. Aber viel bessere waere es wenn die Werte in einem frei definierbaren Intervall aktualisiert werden also z. B. jede Sekunge.
+
+### Sleep / Measure Mode SDS011
+Ich würde sehr gerne eine Funktion in mein Programm integrieren die den SDS011 Sensor auch in den Sleep Mode versetzt wenn keine Messung erfolgen soll. Auch wäre es so möglich abhängig von der Geschwindigkeit den Messintervall des SDS011 einzustellen. Den Hinweis dazu habe ich von link:https://github.com/luetzel[luetzel] erhalten.
+Ich habe mir das folgende Projekt jetzt genauer angeschaut und werde wohl auf diesem Code aufsetzen.
+link:https://gitlab.com/frankrich/sds011_particle_sensor[Frank Heuer SDS011 Python]
+
