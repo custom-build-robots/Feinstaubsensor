@@ -1,32 +1,82 @@
 #!/usr/bin/env python
+#qpy:2
+#qpy:webapp:Feinstaubmessung
+#qpy://127.0.0.1:8181
 # coding: latin-1
-# Autor:   Ingmar Stapel
-# Datum:   20171127
-# Version:   1.1
+# Autor:   Ingmar Stapel, Android-Portierung durch https://github.com/optiprime
+# Datum:   20171231
+# Version:   1.1/android-1.0
 # Homepage:   https://www.byteyourlife.com/
 # Dieses Programm ermoeglicht es einen mobilen Feinstaubsensor
 # auf Basis eines Raspberry Pi Computers zu bauen.
 # Ueber Anregungen und Verbesserungsvorschlaege wuerde
 # ich mich sehr freuen.
 
+##
+## START DER KONFIGURATIONSOPTIONEN
+##
+
+import sys
 import os
+android_platform = (os.environ.get("ANDROID_ROOT") != None)
+
+global dir_path
+
+if android_platform:
+	# Hier wird der Speicherort fuer die KML Dateien und die LOG Dateien
+	# festgelegt. Aendern Sie hier zentral den Speicherort ab.
+	storage = os.environ.get("EXTERNAL_STORAGE")
+	if storage == None:
+		storage = "/sdcard"
+	dir_path = storage + "/Feinstaubsensor/"
+	print("dir_path=%s" % dir_path)
+	sys.stdout.flush()
+	if not os.path.exists(dir_path):
+		os.mkdir(dir_path)
+
+	# Bluetooth MAC-Addresse des HC05/HC06-Moduls, welcher die Verbindung zum
+	# SDS011-Sensor herstellt.
+	sds011_bluetooth_device_id = '20:14:08:13:25:28'
+else:
+	# Hier wird der Speicherort fuer die KML Dateien und die LOG Dateien
+	# festgelegt. Aendern Sie hier zentral den Speicherort ab.
+	dir_path = "/home/pi/Feinstaubsensor/"
+
+	# USB Geraetepfad des Feinstaubsensors bitte hier setzen.
+	sds011 = "/dev/ttyUSB0"
+
+##
+## ENDE DER KONFIGURATIONSOPTIONEN
+##
+
 import time
 import string
-import serial, struct
-from gps import *
+import struct
 
 import datetime
-from random import randint
-import random
 
 from threading import Thread
 import threading
 
 from flask import Flask, jsonify, render_template, request
+
+if android_platform:
+	import select
+	import androidhelper
+	import base64
+else:
+	import serial
+	from gps import *
+
 app = Flask(__name__)
 
 global session
 session = None
+
+global g_lat, g_lng, g_utc
+g_lat = 0
+g_lng = 0
+g_utc = datetime.datetime.utcnow()
 
 global run
 run = False
@@ -47,11 +97,6 @@ pm_25 = 0
 
 global error_msg
 error_msg = ""
-
-# Hier wird der Speicherort fuer die KML Dateien und die LOG Dateien
-# festgelegt. Aendern Sie hier zentral den Speicherort ab.
-global dir_path
-dir_path = "/home/pi/Feinstaubsensor/"
 
 # Default Farbe fuer die Weg-Linie in der KML Datei.
 color = "#00000000"	
@@ -159,18 +204,54 @@ def close_kml(file_name):
 class GpsdStreamReader(threading.Thread):
 	def __init__(self):
 		global session
+		global g_lat, g_lng, g_utc
 		threading.Thread.__init__(self)
-		# 
-		session = gps(mode=WATCH_ENABLE)
+
+		if android_platform:
+			self.droid = androidhelper.Android()
+			self.droid.startLocating(5000, 10)
+			g_lat, g_lng = self.getGpsData()
+			g_utc = datetime.datetime.utcnow()
+		else:
+			session = gps(mode=WATCH_ENABLE)
+			g_utc = session.utc
+			g_lat = session.fix.latitude
+			g_lng = session.fix.longitude
 		self.current_value = None
 		# Der Thread wird ausgefuehrt
 		self.running = True
  
 	def run(self):
 		global session
+		global g_lat, g_lng, g_utc
 		while t_gps.running:
 			# Lese den naechsten Datensatz von GPSD
-			session.next()	  
+			if android_platform:
+				g_lat, g_lng = self.getGpsData()
+				time.sleep(5)
+			else:
+				session.next()	  
+				g_utc = session.utc
+				g_lat = session.fix.latitude
+				g_lng = session.fix.longitude
+
+	def getGpsData(self):
+		lat = 0
+		lng = 0
+
+		loc = self.droid.readLocation().result
+		if loc == {}:
+			loc = self.droid.getLastKnownLocation().result
+		if loc != {}:
+			try:
+				n = loc['gps']
+			except KeyError:
+				n = loc['network']
+			if n != None:
+				lat = n['latitude']
+				lng = n['longitude']
+		
+		return (lat, lng)
 
 # Klasse um auf den SDS001 Sensor via Thread zuzugreifen.
 class SDS001StreamReader(threading.Thread):
@@ -181,19 +262,22 @@ class SDS001StreamReader(threading.Thread):
 		# Variablen fuer die Messwerte vom Feinstaubsensor.
 		byte, lastbyte = "\x00", "\x00"	
 		
-		# USB Geraetepfad des Feinstaubsensors bitte hier setzen.
-		sds011 = "/dev/ttyUSB0"
 		threading.Thread.__init__(self)
-		# Hier wird auf den Serial-USB Konverter zugegriffen
-		try:
-			ser = serial.Serial(sds011, baudrate=9600, stopbits=1, parity="N", timeout=2)
-		except Exception, e:
-			write_log("\n HL-340 USB-Serial Adapter nicht verfuegbar. \n"+str(e))
 
-		try:
-			ser.flushInput()
-		except Exception, e:
-			write_log(e)
+		if android_platform:
+			self.droid = androidhelper.Android()
+			self.connID = None
+		else:
+			# Hier wird auf den Serial-USB Konverter zugegriffen
+			try:
+				ser = serial.Serial(sds011, baudrate=9600, stopbits=1, parity="N", timeout=2)
+			except Exception, e:
+				write_log("\n HL-340 USB-Serial Adapter nicht verfuegbar. \n"+str(e))
+
+			try:
+				ser.flushInput()
+			except Exception, e:
+				write_log(e)
 		
 		self.current_value = None
 		# Der Thread wird ausgefuehrt
@@ -208,33 +292,72 @@ class SDS001StreamReader(threading.Thread):
 		
 		while t_sds011.running:
 			lastbyte = byte
-			try:
-				byte = ser.read(size=1)
-			except Exception, e:
-				write_log("\n Fehler HL-340 USB-Serial Adapter.\n"+str(e))
-
+			if android_platform:
+				byte = self.getBluetoothData(1)
+			else:
+				try:
+					byte = ser.read(size=1)
+				except Exception, e:
+					write_log("\n Fehler HL-340 USB-Serial Adapter.\n"+str(e))
 
 			# Wenn es ein gueltiges Datenpaket gibt bearbeite dieses
 			if lastbyte == "\xAA" and byte == "\xC0":
 				try:
 					# Es werden 8 Byte eingelesen.
-					sentence = ser.read(size=8) 
+					if android_platform:
+						sentence = self.getBluetoothData(8)
+					else:
+						sentence = ser.read(size=8) 
 					# Das eingelesene Datenpaket wird dekodiert.
 					readings = struct.unpack('<hhxxcc',sentence) 
 				except Exception, e:
 					write_log(("\n SDS011 Datenpaket kann nicht gelesen werden. \n"+str(e)))
 					
 				pm_25 = round(readings[0]/10.0, 3)
-				pm_10 = round(readings[1]/10.0, 3)	  
+				pm_10 = round(readings[1]/10.0, 3)
+	
+	def getBluetoothData(self, size):
+		ssp_uuid = '00001101-0000-1000-8000-00805F9B34FB'
+
+		buffer = ''
+		while len(buffer) < size:    
+			while (len(self.droid.bluetoothActiveConnections().result) == 0):
+				if self.connID != None:
+					self.droid.bluetoothStop(self.connID)
+					self.connID = None
+				
+				print ("Connecting/Reconnecting..."	)
+				sys.stdout.flush()
+				self.droid.toggleBluetoothState(True,False)
+				success = self.droid.bluetoothConnect(ssp_uuid, sds011_bluetooth_device_id)
+				if success.error == None:
+					self.connID = success.result
+					print("Connected")
+					sys.stdout.flush()
+				else:
+					print("Connection problem")
+					sys.stdout.flush()
+					time.sleep(1)
+
+			try:
+				result = self.droid.bluetoothReadBinary(size - len(buffer), self.connID).result
+				if result != None:
+					buffer += base64.b64decode(result)
+			except Exception as e:
+				print("Cannot read bluetooth data: %s" % e)
+				sys.stdout.flush()
+				time.sleep(1)
+
+		return buffer
 			
 def start_sensor():
 	global run
-	global session
 	global display_lat
 	global display_lon
 	global pm_10
 	global pm_25
 	global dir_path
+	global g_lat, g_lng, g_utc
 	
 	save_file = False
 
@@ -264,26 +387,26 @@ def start_sensor():
 			# Zeichne die GPS Daten und Feinstaubwerte in einer
 			# KML Datei auf.
 			
-			if -90 <= session.fix.latitude <= 90 and session.fix.latitude != 0:
+			if -90 <= g_lat <= 90 and g_lat != 0:
 				if lat_old == "initial":
-					lat_old = session.fix.latitude
+					lat_old = g_lat
 
 				if lon_old == "initial":	
-					lon_old = session.fix.longitude
+					lon_old = g_lng
 				
 				color_25 = color_selection(pm_25)
 				color_10 = color_selection(pm_10)
 				
-				write_kml_line(str(pm_25), str(pm_old_25), str(lon_old), str(lat_old), str(session.fix.latitude), str(session.fix.longitude), str(session.utc), fname25_line, "25", color_25)
-				write_kml_line(str(pm_10), str(pm_old_10), str(lon_old), str(lat_old), str(session.fix.latitude), str(session.fix.longitude), str(session.utc), fname10_line, "10", color_10)
+				write_kml_line(str(pm_25), str(pm_old_25), str(lon_old), str(lat_old), str(g_lat), str(g_lng), str(g_utc), fname25_line, "25", color_25)
+				write_kml_line(str(pm_10), str(pm_old_10), str(lon_old), str(lat_old), str(g_lat), str(g_lng), str(g_utc), fname10_line, "10", color_10)
 				
-				lat_old = session.fix.latitude
-				lon_old = session.fix.longitude
+				lat_old = g_lat
+				lon_old = g_lng
 				
 				pm_old_25 = pm_25
 				pm_old_10 = pm_10
 
-			write_csv(str(pm_25), str(pm_10), str(session.fix.latitude), str(session.fix.longitude), datetime.datetime.now().strftime ("%Y%m%d;%H:%M:%S"), fname_csv)
+			write_csv(str(pm_25), str(pm_10), str(g_lat), str(g_lng), datetime.datetime.now().strftime ("%Y%m%d;%H:%M:%S"), fname_csv)
 				
 		if run == False:
 			if save_file == True:
@@ -307,7 +430,10 @@ def rebootpi():
 # Hier folgt der Abschnitt fuer den Flask Web-Server
 @app.route('/')
 def index():
-	return render_template('index.html')
+	if android_platform:
+		return render_template('android_index.html')
+	else:
+		return render_template('index.html')
  
 @app.route('/start/', methods=['GET'])
 def start_measure():
@@ -317,7 +443,6 @@ def start_measure():
 	status_text = "Aufzeichnung aktiv."
 	ret_data = {"value": "Start der Aufzeichnung der Messwerte."}
 	return jsonify(ret_data)
-
 
 @app.route('/stopp/', methods=['GET'])
 def stopp():
@@ -336,9 +461,9 @@ def status():
 	global pm_10
 	global pm_25
 	global error_msg
-	global session	
-	display_lat = session.fix.latitude
-	display_lon = session.fix.longitude	
+
+	display_lat = "%.5f" % float(g_lat)
+	display_lon = "%.5f" % float(g_lng)
 	ret_data = {"value": status_text, "lat": display_lat, "lon": display_lon, "pm_10": pm_10, "pm_25":pm_25, "error_msg":error_msg}
 	return jsonify(ret_data)
 	
@@ -353,7 +478,6 @@ def halt():
 	ret_data = {"value": "Der Raspberry Pi schaltet sich in 10 Sekunden aus."}
 	return jsonify(ret_data)
 
-	
 @app.route('/reboot/', methods=['GET'])
 def reboot():
 	global run
@@ -364,9 +488,12 @@ def reboot():
 	
 	ret_data = {"value": "Der Raspberry Pi wird neugestartet"}
 	return jsonify(ret_data)	
-	
-if __name__ == '__main__':
 
+if __name__ == '__main__':
+	if android_platform:
+		droid = androidhelper.Android()
+		droid.wakeLockAcquirePartial()
+	
 	# Start des Threads der den GPS Empfaenger ausliesst.
 	t_gps = GpsdStreamReader()
 	t_gps.start()
@@ -376,17 +503,18 @@ if __name__ == '__main__':
 	t_sds011 = SDS001StreamReader()
 	t_sds011.start()
 	
-	# Kurze Pazse um zu warten bis die beiden Threads t_gps und 
+	# Kurze Pause um zu warten bis die beiden Threads t_gps und 
 	# t_sds01 starten konnten.
 	time.sleep(3)
 	t_start_sensor = Thread(target=start_sensor)
 	t_start_sensor.start()
 	
-	# Initialisieren des Shutdown Threads.
-	t_shutdown = Thread(target=shutdownpi)
-	
-	# Initialisieren des Reboot Threads.
-	t_reboot = Thread(target=rebootpi)		
+	if not android_platform:
+		# Initialisieren des Shutdown Threads.
+		t_shutdown = Thread(target=shutdownpi)
+		
+		# Initialisieren des Reboot Threads.
+		t_reboot = Thread(target=rebootpi)		
 	
 	# Starten des Flask Web-Servers.
 	app.run(host='0.0.0.0', port=8181, debug=False)

@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+{% block content %}
+<script type=text/javascript>
+  $(function() {
+    $("#statusBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: $SCRIPT_ROOT + "/status/",
+            contentType: "application/json; charset=utf-8",
+            data: { echoValue: $('input[name="statusBtn"]').val() },
+            success: function(data) {
+                $('#echoResultStatus').text(data.value);
+				$('#echolat').text(data.lat);
+				$('#echolon').text(data.lon);
+				$('#echopm_10').text(data.pm_10);
+				$('#echopm_25').text(data.pm_25);	
+				$('#echoerror').text(data.error_msg);				
+            }
+        });     
+    });
+    $("#startBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: $SCRIPT_ROOT + "/start/",
+            contentType: "application/json; charset=utf-8",
+            data: { echoValue: $('input[name="startBtn"]').val() },
+            success: function(data) {
+                $('#echoResult').text(data.value);
+            }
+        });     
+    });
+    $("#stoppBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: $SCRIPT_ROOT + "/stopp/",
+            contentType: "application/json; charset=utf-8",
+            data: { echoValue: $('input[name="stoppBtn"]').val() },
+            success: function(data) {
+                $('#echoResult').text(data.value);
+            }
+        });     
+    });
+  });
+</script>
+<br />
+<button class="ui-btn ui-corner-all" type='button' id='startBtn' name='startBtn'>STARTE AUFZEICHNUNG</button>
+<button class="ui-btn ui-corner-all" type='button' id='stoppBtn' name='stoppBtn'>STOPPE AUFZEICHNUNG</button>
+<br />
+<br />
+<button class="ui-btn ui-corner-all" type='button' id='statusBtn' name='statusBtn'>STATUS ANZEIGEN AKTUALISIEREN</button>
+<br />
+<strong>Feinstaubwerte und GPS Position:</strong><br />
+
+<table data-role="table" id="table-column-toggle" data-mode="columntoggle" class="ui-responsive table-stroke">
+     <thead>
+       <tr>
+         <th>PM 10</th>
+         <th>PM 25</th>
+         <th>Latitude</th>
+         <th>Longitude</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td id='echopm_10'></td>
+         <td id='echopm_25'></td>
+         <td id='echolat'></td>
+         <td id='echolon'></td>
+       </tr>
+	 </tbody>
+</table>
+<br />
+<br />
+<strong>Weitere Informationen:</strong><br />
+<div style="background-color:red;" id='echoerror'></div>
+<div id='echoResultStatus'></div>
+<div id='echoResult'></div>
+{% endblock %}
