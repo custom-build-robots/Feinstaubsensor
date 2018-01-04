@@ -1,7 +1,9 @@
-# Mobiler Feinstaubsensor - Software
+# Mobiler Feinstaubsensor - Raspberry Pi (Software)
 Hier finden Sie das Python Programm fuer den Nachbau des Feinstaubsensors auf Basis eines Raspberry Pi, SDS011 Feinstaubsensors und einem GPS Empfaengers wie in der [C't 1/2018](https://www.heise.de/ct/ausgabe/2018-1-Feinstaub-unterwegs-messen-und-mit-GPS-Daten-aufzeichnen-3919188.html) beschrieben. 
 Die Bedienung des Feinstaubsensors erfolgt ueber eine Web-Oberflaeche die durch den Flask Web-Server bereitgestellt wird.
-Inzwischen wurde das Programm auch auch die Android-Plattform portiert. Weitere Details dazu sind im Abschnitt **"Android-Variante"** aufgeführt.
+
+### Hinweis
+Inzwischen wurde das Programm auch fuer die Android-Plattform portiert. Weitere Details dazu sind im Abschnitt **"Android-Variante"** weiter unter aufgeführt.
 
 ## Komponentenliste
 Die Liste der Komponenten die Sie benoetigen um den mobilen Feinstaubsensor selber bauen zu koennen finden Sie auf meinem Blog: [www.byteyourlife.com](https://www.byteyourlife.com/haushaltsgeraete/feinstaubsensor-komponentenliste/7369)
@@ -29,7 +31,7 @@ Ich würde sehr gerne eine Funktion in mein Programm integrieren die den SDS011 
 Ich habe mir das folgende Projekt jetzt genauer angeschaut und werde wohl auf diesem Code aufsetzen.
 [Frank Heuer SDS011 Python](https://gitlab.com/frankrich/sds011_particle_sensor)
 
-# Android-Variante
+# Mobiler Feinstaubsensor - Android-Variante
 Da fast alle Android-Handys über einen leistungsfähigen Prozessor, GPS und Bluetooth verfügen, kommt man bei dieser Lösung auch ohne Raspberry-Pi und die externe GPS-Maus aus. Das Python-Programm läuft dann unter Android und die Verbindung zum Feinstaubsensor SDS011 erfolgt über Bluetooth. Prinzipiell wäre auch der Betrieb auf iPhone möglich, wurde aber im Testaufbau mangels Geräteverfügbarkeit nicht weiter verfolgt.
 
 ## Benötigte Komponenten
