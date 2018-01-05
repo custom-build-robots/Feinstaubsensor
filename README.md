@@ -86,5 +86,4 @@ Das Projekt hat mich so faziniert, dass ich die Android-Portierung bereits vor d
 Aktuell aktualisiert die Web-Overflaeche nur die gemessenen Werte wenn expliziet das refresh Button gedrueckt wird. Aber viel bessere waere es wenn die Werte in einem frei definierbaren Intervall aktualisiert werden also z. B. jede Sekunge.
 
 # Mobiler Feinstaubsensor - Android-Variante mit USB Adapter
-Eine Idee auf die mich Sebastian Müller brachte ist eine Android Variante nur mit einem USB Adapter zu bauen. Noch fehlt mir das Wissen die Programmierung auf Basis der durch "optiprime" entwickelten Android Variante vorzunehmen. Hier ist schon mal die notwendige Hardware zu sehen.
-https://www.byteyourlife.com/wp-content/uploads/2018/01/Feinstaubsensor_Android_Smartphone-300x200.jpg
+Eine Idee auf die mich Sebastian Müller brachte ist eine Android Variante nur mit einem USB Adapter zu bauen. Noch fehlt mir das Wissen die Programmierung auf Basis der durch "optiprime" entwickelten Android Variante vorzunehmen. Hier ist schon mal die notwendige Hardware zu sehen. ![USB serial Andorid version]https://www.byteyourlife.com/wp-content/uploads/2018/01/Feinstaubsensor_Android_Smartphone-300x200.jpg
