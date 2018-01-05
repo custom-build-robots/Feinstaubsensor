@@ -3,7 +3,7 @@ Hier finden Sie das Python Programm fuer den Nachbau des Feinstaubsensors auf Ba
 Die Bedienung des Feinstaubsensors erfolgt ueber eine Web-Oberflaeche die durch den Flask Web-Server bereitgestellt wird.
 
 ### Hinweis
-Inzwischen wurde das Programm auch fuer die Android-Plattform durch den User "optiprime" portiert. Weitere Details dazu sind im Abschnitt **"Mobiler Feinstaubsensor - Android-Variante"** weiter unter aufgeführt. Mein Dank für diese Portierung geht an den GitHub User "optiprime"!
+Inzwischen wurde das Programm auch fuer die Android-Plattform durch den User "optiprime" portiert. Weitere Details dazu sind im Abschnitt **"Mobiler Feinstaubsensor - Android-Variante"** weiter unter aufgeführt. Mein Dank für diese Portierung geht an den GitHub User [optiprime](https://github.com/optiprime).
 
 ## Komponentenliste
 Die Liste der Komponenten die Sie benoetigen um den mobilen Feinstaubsensor selber bauen zu koennen finden Sie auf meinem Blog: [www.byteyourlife.com](https://www.byteyourlife.com/haushaltsgeraete/feinstaubsensor-komponentenliste/7369)
