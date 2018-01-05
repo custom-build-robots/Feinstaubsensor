@@ -3,7 +3,7 @@ Hier finden Sie das Python Programm fuer den Nachbau des Feinstaubsensors auf Ba
 Die Bedienung des Feinstaubsensors erfolgt ueber eine Web-Oberflaeche die durch den Flask Web-Server bereitgestellt wird.
 
 ### Hinweis
-Inzwischen wurde das Programm auch fuer die Android-Plattform portiert. Weitere Details dazu sind im Abschnitt **"Mobiler Feinstaubsensor - Android-Variante"** weiter unter aufgeführt.
+Inzwischen wurde das Programm auch fuer die Android-Plattform durch den User "optiprime" portiert. Weitere Details dazu sind im Abschnitt **"Mobiler Feinstaubsensor - Android-Variante"** weiter unter aufgeführt. Mein Dank für diese Portierung geht an den GitHub User "optiprime"!
 
 ## Komponentenliste
 Die Liste der Komponenten die Sie benoetigen um den mobilen Feinstaubsensor selber bauen zu koennen finden Sie auf meinem Blog: [www.byteyourlife.com](https://www.byteyourlife.com/haushaltsgeraete/feinstaubsensor-komponentenliste/7369)
@@ -31,7 +31,7 @@ Ich würde sehr gerne eine Funktion in mein Programm integrieren die den SDS011 
 Ich habe mir das folgende Projekt jetzt genauer angeschaut und werde wohl auf diesem Code aufsetzen.
 [Frank Heuer SDS011 Python](https://gitlab.com/frankrich/sds011_particle_sensor)
 
-# Mobiler Feinstaubsensor - Android-Variante
+# Mobiler Feinstaubsensor - Android-Variante mit HC-06 Bluetooth Adapter
 Da fast alle Android-Handys über einen leistungsfähigen Prozessor, GPS und Bluetooth verfügen, kommt man bei dieser Lösung auch ohne Raspberry-Pi und die externe GPS-Maus aus. Das Python-Programm läuft dann unter Android und die Verbindung zum Feinstaubsensor SDS011 erfolgt über Bluetooth. Prinzipiell wäre auch der Betrieb auf iPhone möglich, wurde aber im Testaufbau mangels Geräteverfügbarkeit nicht weiter verfolgt.
 
 ## Benötigte Komponenten
@@ -84,3 +84,7 @@ Die Messdaten werden im Unterverzeichnis `Feinstaubsensor` im *Internen Speicher
 Das Projekt hat mich so faziniert, dass ich die Android-Portierung bereits vor der Lieferung des SDS011 Sensors umgesetzt habe. Damit ich dennoch das Zusammenspiel der Komponenten testen konnte, habe ich einen *Mock*, d.h. eine Ersatzkomponente für den Sensor gebaut, die schnittstellenkompatibel ist. Hierzu habe ich einen Arduino Nano verwendet, dessen serielles Interface ich mit dem HC-06 verbunden habe. Das passende Arduino-Programm ist im Verzeichnis [SDS011_Mock](SDS011_Mock/SDS011_Mock.ino) abgelegt.
 
 Aktuell aktualisiert die Web-Overflaeche nur die gemessenen Werte wenn expliziet das refresh Button gedrueckt wird. Aber viel bessere waere es wenn die Werte in einem frei definierbaren Intervall aktualisiert werden also z. B. jede Sekunge.
+
+# Mobiler Feinstaubsensor - Android-Variante mit USB Adapter
+Eine Idee auf die mich Sebastian Müller brachte ist eine Android Variante nur mit einem USB Adapter zu bauen. Noch fehlt mir das Wissen die Programmierung auf Basis der durch "optiprime" entwickelten Android Variante vorzunehmen. Hier ist schon mal die notwendige Hardware zu sehen.
+https://www.byteyourlife.com/wp-content/uploads/2018/01/Feinstaubsensor_Android_Smartphone-300x200.jpg
