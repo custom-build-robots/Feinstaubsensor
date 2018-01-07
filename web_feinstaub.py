@@ -129,6 +129,21 @@ def color_selection(value):
 		
 	return color
 
+# und hier fuer die Darstellung im Frontend 
+def color_selection_rgb(value):
+	# red
+	color = "#149600"	
+	if 50 <= value <= 2000:
+		color = "#F00014"
+	# orange
+	elif 25 <= value <= 49:
+		color = "#FF7814"
+	# green
+	elif 0 <= value < 25:
+		color = "#2bef0d"		
+		
+	return color
+
 # Diese Funktion schreibt die CSV Datei mit den Feinstaubwerten und
 # den GPS Koordinaten.
 def write_csv(pm_25, pm_10, value_lat, value_lon, value_time, value_fname):
@@ -356,6 +371,10 @@ def start_sensor():
 	global display_lon
 	global pm_10
 	global pm_25
+	global pm_10_sum
+	global pm_25_sum
+	global avg_count
+	global status_text
 	global dir_path
 	global g_lat, g_lng, g_utc
 	
@@ -368,6 +387,10 @@ def start_sensor():
 	# Feinstaubwerte 25 und 10 als Vorgaengerwert.
 	pm_old_25 = 0
 	pm_old_10 = 0
+
+	pm_10_sum = 0
+	pm_25_sum = 0
+	avg_count = 0
 
 	while True:
 				
@@ -407,6 +430,12 @@ def start_sensor():
 				pm_old_10 = pm_10
 
 			write_csv(str(pm_25), str(pm_10), str(g_lat), str(g_lng), datetime.datetime.now().strftime ("%Y%m%d;%H:%M:%S"), fname_csv)
+
+			pm_10_sum += pm_10
+			pm_25_sum += pm_25
+			avg_count += 1
+
+			status_text = "Mittelwerte: {:.1f}, {:.1f}".format(pm_10_sum / avg_count, pm_25_sum / avg_count)
 				
 		if run == False:
 			if save_file == True:
@@ -464,7 +493,9 @@ def status():
 
 	display_lat = "%.5f" % float(g_lat)
 	display_lon = "%.5f" % float(g_lng)
-	ret_data = {"value": status_text, "lat": display_lat, "lon": display_lon, "pm_10": pm_10, "pm_25":pm_25, "error_msg":error_msg}
+	ret_data = {"value": status_text, "lat": display_lat, "lon": display_lon,
+		"pm_10": pm_10, "pm_10_color": color_selection_rgb(pm_10), "pm_25": pm_25, "pm_25_color": color_selection_rgb(pm_25),
+		"error_msg": error_msg}
 	return jsonify(ret_data)
 	
 @app.route('/halt/', methods=['GET'])

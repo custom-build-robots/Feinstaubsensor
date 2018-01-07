@@ -23,9 +23,6 @@ In den Feinstaubsensor wurde noch ein Adafruit [BME280 Sensor](https://www.adafr
 ## Wunschliste
 Die Wunschliste listet die Funktionen auf die ich noch gerne in das Projekt integrieren möchte.
 
-### Flask-SocketIO asynchrones Updates
-Aktuell aktualisiert die Web-Overflaeche nur die gemessenen Werte wenn expliziet das refresh Button gedrueckt wird. Aber viel bessere waere es wenn die Werte in einem frei definierbaren Intervall aktualisiert werden also z. B. jede Sekunde.
-
 ### Sleep / Measure Mode fuer den SDS011 Sensor
 Ich würde sehr gerne eine Funktion in mein Programm integrieren die den SDS011 Sensor auch in den Sleep Mode versetzt wenn keine Messung erfolgen soll. Auch wäre es so möglich abhängig von der Geschwindigkeit den Messintervall des SDS011 einzustellen. Den Hinweis dazu habe ich von dem GitHub User [luetzel](https://github.com/luetzel) erhalten.
 Ich habe mir das folgende Projekt jetzt genauer angeschaut und werde wohl auf diesem Code aufsetzen.
@@ -49,8 +46,14 @@ Die Hardware-Komponenten werden wie folgt verkabelt:
 
 Ähnlich wie in der Raspberry-Variante werden sie in eine passende Box gepackt und mit der Powerbank verbunden.
 
+## Fotos vom Aufbau
+
+![Aufbau1](Android-Aufbau1.jpg)
+![Aufbau2](Android-Aufbau2.jpg)
+![Aufbau3](Android-Aufbau3.jpg)
+
 ## Software-Installation und -Konfiguration
-[QPython](https://play.google.com/store/apps/details?id=org.qpython.qpy&hl=de) lässt sich kostenlos über den Google Playstore installieren. Bitte nicht QPython3 verwenden, das unsere Code nicht kompatibel mit Python 3.X ist. Nach Start der App ist zunächst das Python-Modul *flask* zu installieren. Hierzu zunächst auf den oberen Button mit dem gelben Quadrat ![](Android-QPython.jpg) drücken und im Folgedialog *pip_console.py" auswählen. In dem sich dann öffnenden Terminal-Fenster das Kommando
+[QPython](https://play.google.com/store/apps/details?id=org.qpython.qpy&hl=de) lässt sich kostenlos über den Google Playstore installieren. Bitte nicht QPython3 verwenden, das unsere Code nicht kompatibel mit Python 3.X ist. Nach Start der App ist zunächst das Python-Modul *flask* zu installieren. Hierzu zunächst auf den oberen Button mit dem gelben Quadrat ![](Android-QPython.jpg) drücken und im Folgedialog *pip_console.py" oder "pip4console.py" auswählen. In dem sich dann öffnenden Terminal-Fenster das Kommando
 
 ```
 pip install flask
@@ -81,9 +84,7 @@ Das Programm läuft problemlos im Hintergrund weiter und speichert Messdaten, se
 Die Messdaten werden im Unterverzeichnis `Feinstaubsensor` im *Internen Speicher* des Handys gespeichert. Schließt man sein Handy wieder über den USB an den PC an, so lassen sich die Daten sehr einfach übertragen bzw. sofort in Google Earth öffnen.
 
 ## SDS011-Mock
-Das Projekt hat mich so faziniert, dass ich die Android-Portierung bereits vor der Lieferung des SDS011 Sensors umgesetzt habe. Damit ich dennoch das Zusammenspiel der Komponenten testen konnte, habe ich einen *Mock*, d.h. eine Ersatzkomponente für den Sensor gebaut, die schnittstellenkompatibel ist. Hierzu habe ich einen Arduino Nano verwendet, dessen serielles Interface ich mit dem HC-06 verbunden habe. Das passende Arduino-Programm ist im Verzeichnis [SDS011_Mock](SDS011_Mock/SDS011_Mock.ino) abgelegt.
-
-Aktuell aktualisiert die Web-Overflaeche nur die gemessenen Werte wenn expliziet das refresh Button gedrueckt wird. Aber viel bessere waere es wenn die Werte in einem frei definierbaren Intervall aktualisiert werden also z. B. jede Sekunge.
+Wenn man noch auf die Lieferung seines SDS011 Sensors wartet oder das Zusammenspiel der Komponenten testen möchte, kann man einen *Mock*, d.h. eine Ersatzkomponente für den Sensor bauen, die schnittstellenkompatibel ist. Hierzu kann z.B. ein Arduino Nano verwendet werden, dessen serielles Interface mit dem HC-06 verbunden wird. Das passende Arduino-Programm ist im Verzeichnis [SDS011_Mock](SDS011_Mock/SDS011_Mock.ino) abgelegt.
 
 # Mobiler Feinstaubsensor - Android-Variante mit USB Adapter
 Eine Idee auf die mich Sebastian Müller brachte ist eine Android Variante nur mit einem USB Adapter zu bauen. Noch fehlt mir das Wissen die Programmierung auf Basis der durch "optiprime" entwickelten Android Variante vorzunehmen. Aber der Zugriff ueber das USB Kabel auf den SDS011 Sensor sollte eventuell mit den hier beschriebenen [USB Host Serial Facade](http://www.qpython.org/en/guide_androidhelpers.html#usb-host-serial-facade) moeglich sein.
