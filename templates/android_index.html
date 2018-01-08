@@ -44,8 +44,15 @@
     });
     startPeriodicRefresh(1);
  
+    $("#refreshBtn").click(function() {
+         refreshStatus();     
+    });
+
     $("#startBtn").click(function() {
-         $.ajax({
+        $(this).prop('disabled', true);
+        $("#stoppBtn").prop('disabled', false);
+
+        $.ajax({
             type: "GET",
             url: $SCRIPT_ROOT + "/start/",
             contentType: "application/json; charset=utf-8",
@@ -57,7 +64,10 @@
         });     
     });
     $("#stoppBtn").click(function() {
-         $.ajax({
+        $(this).prop('disabled', true);
+        $("#startBtn").prop('disabled', false);
+        
+        $.ajax({
             type: "GET",
             url: $SCRIPT_ROOT + "/stopp/",
             contentType: "application/json; charset=utf-8",
@@ -68,16 +78,19 @@
             }
         });     
     });
+    $("#stoppBtn").prop('disabled', true);
   });
 </script>
-<br />
-<button class="ui-btn ui-corner-all" type='button' id='startBtn' name='startBtn'>STARTE AUFZEICHNUNG</button>
-<button class="ui-btn ui-corner-all" type='button' id='stoppBtn' name='stoppBtn'>STOPPE AUFZEICHNUNG</button>
+<strong>Datenaufzeichnung:</strong><br />
+<div class="ui-grid-a">
+    <div class="ui-block-a"><button class="ui-btn ui-corner-all" type='button' id='startBtn' name='startBtn'>START</button></div>
+    <div class="ui-block-b"><button class="ui-btn ui-corner-all" type='button' id='stoppBtn' name='stoppBtn'>STOPP</button></div>
+</div>
 <br />
 <br />
 <strong>Feinstaubwerte und GPS Position:</strong><br />
 
-<table data-role="table" id="table-column-toggle" data-mode="columntoggle" class="ui-responsive table-stroke">
+<table data-role="table" id="table-column-toggle" data-mode="columntoggle" class="ui-responsive table-stroke" style="width: 100%">
      <thead>
        <tr>
          <th>PM 10</th>
@@ -88,10 +101,10 @@
      </thead>
      <tbody>
        <tr>
-         <td id='echopm_10'></td>
-         <td id='echopm_25'></td>
-         <td id='echolat'></td>
-         <td id='echolon'></td>
+         <td id="echopm_10" align="center" style="font-size: 30px"></td>
+         <td id="echopm_25" align="center" style="font-size: 30px"></td>
+         <td id="echolat" align="center"></td>
+         <td id="echolon" align="center"></td>
        </tr>
 	 </tbody>
 </table>
@@ -104,12 +117,19 @@
 <br />
 <br />
 <strong>Aktualisierung der Anzeige:</strong><br />
-<select id="refreshRate" data-native-menu="false">
-    <option value="1">Jede Sekunde</option>
-    <option value="5">Alle fünf Sekunden</option>
-    <option value="30">Alle 30 Sekunden</option>
-    <option value="300">Alle fünf Minuten</option>
-</select>
+<div class="ui-grid-a">
+    <div class="ui-block-a">
+        <select class="ui-btn ui-corner-all" id="refreshRate" data-native-menu="false">
+            <option value="1">1 Sekunde</option>
+            <option value="5">5 Sekunden</option>
+            <option value="30">30 Sekunden</option>
+            <option value="300">5 Minuten</option>
+        </select>
+    </div>
+    <div class="ui-block-b">
+        <button class="ui-btn ui-corner-all" type='button' id='refreshBtn'>SOFORT</button>
+    </div>
+</div>
 <br/>
 <br/>
 <a href="https://www.umweltbundesamt.de/themen/luft/luftschadstoffe/feinstaub">Grenzwerte Umweltbundesamt</a>
