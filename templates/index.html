@@ -1,45 +1,85 @@
 {% extends "layout.html" %}
 {% block content %}
 <script type=text/javascript>
+  refreshTimer = null;
+  refreshInterval = 1000;
+  
+  function refreshStatus() {
+    $.ajax({
+        type: "GET",
+        url: $SCRIPT_ROOT + "/status/",
+        contentType: "application/json; charset=utf-8",
+        data: { echoValue: $('input[name="statusBtn"]').val() },
+        success: function(data) {
+            $('#echoResultStatus').text(data.value);        
+            $('#echolat').text(data.lat);
+            $('#echolon').text(data.lon);
+            $('#echopm_10').text(data.pm_10);
+            $('#echopm_10').css("background-color", data.pm_10_color);
+            $('#echopm_25').text(data.pm_25);
+            $('#echopm_25').css("background-color", data.pm_25_color);
+            $('#echoerror').text(data.error_msg);				
+        }
+    });     
+  };
+
+  function periodicRefresh() {
+    refreshStatus();
+
+    setTimeout(periodicRefresh, refreshInterval);
+  };
+
+  function startPeriodicRefresh(seconds) {
+    if (refreshTimer)
+        clearTimeout(refreshTimer);
+    
+    refreshInterval = seconds * 1000;
+    
+    refreshTimer = setTimeout(periodicRefresh, refreshInterval);
+  }
+
   $(function() {
-    $("#statusBtn").click(function() {
-         $.ajax({
-            type: "GET",
-            url: $SCRIPT_ROOT + "/status/",
-            contentType: "application/json; charset=utf-8",
-            data: { echoValue: $('input[name="statusBtn"]').val() },
-            success: function(data) {
-                $('#echoResultStatus').text(data.value);
-				$('#echolat').text(data.lat);
-				$('#echolon').text(data.lon);
-				$('#echopm_10').text(data.pm_10);
-				$('#echopm_25').text(data.pm_25);	
-				$('#echoerror').text(data.error_msg);				
-            }
-        });     
+    $('#refreshRate').change(function() {
+        startPeriodicRefresh($('#refreshRate').val());
     });
+    startPeriodicRefresh(1);
+ 
+    $("#refreshBtn").click(function() {
+         refreshStatus();     
+    });
+
     $("#startBtn").click(function() {
-         $.ajax({
+        $(this).prop('disabled', true);
+        $("#stoppBtn").prop('disabled', false);
+
+        $.ajax({
             type: "GET",
             url: $SCRIPT_ROOT + "/start/",
             contentType: "application/json; charset=utf-8",
             data: { echoValue: $('input[name="startBtn"]').val() },
             success: function(data) {
                 $('#echoResult').text(data.value);
+                refreshStatus();
             }
         });     
     });
     $("#stoppBtn").click(function() {
-         $.ajax({
+        $(this).prop('disabled', true);
+        $("#startBtn").prop('disabled', false);
+        
+        $.ajax({
             type: "GET",
             url: $SCRIPT_ROOT + "/stopp/",
             contentType: "application/json; charset=utf-8",
             data: { echoValue: $('input[name="stoppBtn"]').val() },
             success: function(data) {
                 $('#echoResult').text(data.value);
+                refreshStatus();
             }
         });     
     });
+    $("#stoppBtn").prop('disabled', true);
+
     $("#haltBtn").click(function() {
          $.ajax({
             type: "GET",
@@ -78,8 +118,6 @@
 </div>
 <br />
 <br />
-<button class="ui-btn ui-corner-all" type='button' id='statusBtn' name='statusBtn'>STATUS ANZEIGEN AKTUALISIEREN</button>
-<br />
 <strong>Feinstaubwerte und GPS Position:</strong><br />
 
 <table data-role="table" id="table-column-toggle" data-mode="columntoggle" class="ui-responsive table-stroke">
@@ -93,10 +131,10 @@
      </thead>
      <tbody>
        <tr>
-         <td id='echopm_10'></td>
-         <td id='echopm_25'></td>
-         <td id='echolat'></td>
-         <td id='echolon'></td>
+          <td id="echopm_10" align="center" style="font-size: 30px"></td>
+          <td id="echopm_25" align="center" style="font-size: 30px"></td>
+          <td id="echolat" align="center"></td>
+          <td id="echolon" align="center"></td>
        </tr>
 	 </tbody>
 </table>
@@ -107,4 +145,21 @@
 <div id='echoResultStatus'></div>
 <div id='echoResultRaspberry'></div>
 <div id='echoResult'></div>
+<br />
+<br />
+<strong>Aktualisierung der Anzeige:</strong><br />
+<div class="ui-grid-a">
+    <div class="ui-block-a">
+        <select class="ui-btn ui-corner-all" id="refreshRate" data-native-menu="false">
+            <option value="1">1 Sekunde</option>
+            <option value="5">5 Sekunden</option>
+            <option value="30">30 Sekunden</option>
+            <option value="300">5 Minuten</option>
+        </select>
+    </div>
+    <div class="ui-block-b">
+        <button class="ui-btn ui-corner-all" type='button' id='refreshBtn'>SOFORT</button>
+    </div>
+</div>
+<a href="https://www.umweltbundesamt.de/themen/luft/luftschadstoffe/feinstaub">Grenzwerte Umweltbundesamt</a>
 {% endblock %}

@@ -5,7 +5,7 @@
 # coding: latin-1
 # Autor:   Ingmar Stapel, Android-Portierung durch https://github.com/optiprime
 # Datum:   20171231
-# Version:   1.1/android-1.0
+# Version:   1.1/android-1.2
 # Homepage:   https://www.byteyourlife.com/
 # Dieses Programm ermoeglicht es einen mobilen Feinstaubsensor
 # auf Basis eines Raspberry Pi Computers zu bauen.
@@ -64,11 +64,15 @@ if android_platform:
 	import select
 	import androidhelper
 	import base64
+	import logging
 else:
 	import serial
 	from gps import *
 
 app = Flask(__name__)
+if android_platform:
+	log = logging.getLogger('werkzeug')
+	log.setLevel(logging.ERROR)
 
 global session
 session = None
@@ -116,9 +120,8 @@ def write_log(msg):
 
 # Hier wird die Farbe fuer die Linie festgelegt.
 def color_selection(value):
-	# red
-	color = "#64009614"	
-	if 50 <= value <= 2000:
+	# red	
+	if 50 <= value:
 		color = "#641400F0"
 	# orange
 	elif 25 <= value <= 49:
@@ -126,6 +129,20 @@ def color_selection(value):
 	# green
 	elif 0 <= value < 25:
 		color = "#64009614"		
+		
+	return color
+
+# und hier fuer die Darstellung im Frontend 
+def color_selection_rgb(value):
+	# red	
+	if 50 <= value:
+		color = "#F00014"
+	# orange
+	elif 25 <= value <= 49:
+		color = "#FF7814"
+	# green
+	elif 0 <= value < 25:
+		color = "#2bef0d"		
 		
 	return color
 
@@ -317,6 +334,8 @@ class SDS001StreamReader(threading.Thread):
 				pm_10 = round(readings[1]/10.0, 3)
 	
 	def getBluetoothData(self, size):
+		global error_msg
+
 		ssp_uuid = '00001101-0000-1000-8000-00805F9B34FB'
 
 		buffer = ''
@@ -326,7 +345,7 @@ class SDS001StreamReader(threading.Thread):
 					self.droid.bluetoothStop(self.connID)
 					self.connID = None
 				
-				print ("Connecting/Reconnecting..."	)
+				print("Connecting/Reconnecting...")
 				sys.stdout.flush()
 				self.droid.toggleBluetoothState(True,False)
 				success = self.droid.bluetoothConnect(ssp_uuid, sds011_bluetooth_device_id)
@@ -335,7 +354,8 @@ class SDS001StreamReader(threading.Thread):
 					print("Connected")
 					sys.stdout.flush()
 				else:
-					print("Connection problem")
+					error_msg = "Problem beim Verbinden mit Feinstaubsensor!"
+					print(error_msg)
 					sys.stdout.flush()
 					time.sleep(1)
 
@@ -348,6 +368,8 @@ class SDS001StreamReader(threading.Thread):
 				sys.stdout.flush()
 				time.sleep(1)
 
+		error_msg = ""
+		
 		return buffer
 			
 def start_sensor():
@@ -356,6 +378,10 @@ def start_sensor():
 	global display_lon
 	global pm_10
 	global pm_25
+	global pm_10_sum
+	global pm_25_sum
+	global avg_count
+	global status_text
 	global dir_path
 	global g_lat, g_lng, g_utc
 	
@@ -368,6 +394,10 @@ def start_sensor():
 	# Feinstaubwerte 25 und 10 als Vorgaengerwert.
 	pm_old_25 = 0
 	pm_old_10 = 0
+
+	pm_10_sum = 0
+	pm_25_sum = 0
+	avg_count = 0
 
 	while True:
 				
@@ -407,6 +437,12 @@ def start_sensor():
 				pm_old_10 = pm_10
 
 			write_csv(str(pm_25), str(pm_10), str(g_lat), str(g_lng), datetime.datetime.now().strftime ("%Y%m%d;%H:%M:%S"), fname_csv)
+
+			pm_10_sum += pm_10
+			pm_25_sum += pm_25
+			avg_count += 1
+
+			status_text = "Mittelwerte: {:.1f}, {:.1f}".format(pm_10_sum / avg_count, pm_25_sum / avg_count)
 				
 		if run == False:
 			if save_file == True:
@@ -464,7 +500,10 @@ def status():
 
 	display_lat = "%.5f" % float(g_lat)
 	display_lon = "%.5f" % float(g_lng)
-	ret_data = {"value": status_text, "lat": display_lat, "lon": display_lon, "pm_10": pm_10, "pm_25":pm_25, "error_msg":error_msg}
+	ret_data = {"value": status_text, "lat": display_lat, "lon": display_lon,
+		"pm_10": "%6.1f" % pm_10, "pm_10_color": color_selection_rgb(pm_10),
+		"pm_25": "%6.1f" % pm_25, "pm_25_color": color_selection_rgb(pm_25),
+		"error_msg": error_msg}
 	return jsonify(ret_data)
 	
 @app.route('/halt/', methods=['GET'])
